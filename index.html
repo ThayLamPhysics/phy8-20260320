@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vật Lý 8 - Sự Truyền Nhiệt | Thầy Lâm - Isometric Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax -->
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            chtml: { displayAlign: 'left' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f7fee7; /* Lime-50 */
+            color: #064e3b;
+            overflow-x: hidden;
+        }
+
+        /* Isometric Card Effect */
+        .iso-card {
+            background: white;
+            border: 2px solid #064e3b;
+            box-shadow: 8px 8px 0px #166534;
+            transition: all 0.2s ease;
+        }
+        .iso-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 12px 12px 0px #166534;
+        }
+
+        /* Isometric Button */
+        .iso-btn {
+            position: relative;
+            background: #22c55e;
+            border: 2px solid #064e3b;
+            color: white;
+            font-weight: 800;
+            box-shadow: 4px 4px 0px #064e3b;
+            transition: all 0.1s;
+        }
+        .iso-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px #064e3b;
+        }
+        .iso-btn-yellow {
+            background: #facc15;
+            color: #064e3b;
+        }
+
+        /* Sidebar Navigation Isometric Styles */
+        .nav-item {
+            position: relative;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .nav-item.active {
+            background: #ecfdf5;
+            border: 2px solid #064e3b;
+            box-shadow: 4px 4px 0px #064e3b;
+            transform: translate(-2px, -2px);
+        }
+
+        /* Cover Page */
+        #cover-page.hidden-state {
+            opacity: 0;
+            transform: translateY(-100%) skewY(-5deg);
+            pointer-events: none;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .float-animation { animation: float 3s ease-in-out infinite; }
+
+        @keyframes heatFlowIso {
+            0% { transform: translate(0, 0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translate(100px, 50px); opacity: 0; }
+        }
+        .heat-iso { animation: heatFlowIso 2s infinite linear; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 1024px) {
+            #sidebar {
+                transform: translateX(-110%);
+                z-index: 100;
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TRANG BÌA (COVER PAGE) -->
+    <div id="cover-page" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#facc15] transition-all duration-700 ease-in-out overflow-hidden">
+        <!-- Isometric Background Elements -->
+        <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#064e3b 1px, transparent 1px); background-size: 30px 30px;"></div>
+        
+        <div class="relative z-10 text-center px-6">
+            <div class="iso-card inline-block p-12 bg-white rotate-[-2deg]">
+                <h1 class="text-5xl md:text-7xl font-extrabold text-green-900 mb-2 leading-tight">SỰ TRUYỀN<br>NHIỆT</h1>
+                <p class="text-xl font-bold text-green-700 mb-8">VẬT LÝ 8 • THẦY LÂM</p>
+                <div class="flex justify-center mb-10">
+                    <div class="w-32 h-32 bg-green-100 border-4 border-green-800 flex items-center justify-center float-animation shadow-[10px_10px_0px_#166534]">
+                        <svg viewBox="0 0 24 24" class="w-16 h-16 text-green-800" fill="currentColor"><path d="M12 2L1 21h22L12 2zm0 3.45l8.15 14.1H3.85L12 5.45z"/></svg>
+                    </div>
+                </div>
+                <button onclick="startLesson()" class="iso-btn px-12 py-5 text-2xl rounded-none w-full">
+                    BẮT ĐẦU HỌC
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP STRUCTURE -->
+    <div class="flex min-h-screen">
+        
+        <!-- SIDEBAR NAVIGATION (ISOMETRIC) -->
+        <aside id="sidebar" class="fixed lg:sticky top-0 h-screen w-72 bg-white border-r-4 border-green-900 p-6 flex flex-col transition-transform duration-300">
+            <div class="mb-12">
+                <div class="bg-green-900 text-white p-4 font-black text-2xl mb-1 italic shadow-[4px_4px_0px_#facc15]">
+                    LÝ 8.
+                </div>
+                <p class="text-xs font-bold text-green-700 uppercase tracking-widest">Physics with Master Lam</p>
+            </div>
+
+            <nav class="space-y-4 flex-grow">
+                <button onclick="switchTab('intro')" id="nav-intro" class="nav-item active w-full text-left p-4 font-bold text-green-900 flex items-center gap-3">
+                    <span class="w-2 h-2 bg-green-900"></span> GIỚI THIỆU
+                </button>
+                <button onclick="switchTab('tab1')" id="nav-tab1" class="nav-item w-full text-left p-4 font-bold text-green-900 flex items-center gap-3">
+                    <span class="w-2 h-2 bg-green-900"></span> DẪN & CÁCH NHIỆT
+                </button>
+                <button onclick="switchTab('tab2')" id="nav-tab2" class="nav-item w-full text-left p-4 font-bold text-green-900 flex items-center gap-3">
+                    <span class="w-2 h-2 bg-green-900"></span> PHƯƠNG PHÁP TRUYỀN
+                </button>
+                <button onclick="switchTab('tab3')" id="nav-tab3" class="nav-item w-full text-left p-4 font-bold text-green-900 flex items-center gap-3">
+                    <span class="w-2 h-2 bg-green-900"></span> ỨNG DỤNG THỰC TẾ
+                </button>
+                <button onclick="switchTab('test')" id="nav-test" class="nav-item w-full text-left p-4 font-bold text-green-900 flex items-center gap-3">
+                    <span class="w-2 h-2 bg-green-900"></span> BÀI KIỂM TRA
+                </button>
+            </nav>
+
+            <div class="mt-auto pt-6 border-t-2 border-green-100 italic text-sm text-green-600">
+                Thầy Lâm: "Học đi đôi với hành."
+            </div>
+            
+            <!-- Mobile Close Button -->
+            <button onclick="toggleSidebar()" class="lg:hidden mt-4 iso-btn-yellow p-2 font-bold border-2 border-green-900">ĐÓNG MENU</button>
+        </aside>
+
+        <!-- CONTENT -->
+        <main class="flex-grow p-6 md:p-12">
+            <!-- Mobile Menu Toggle -->
+            <button onclick="toggleSidebar()" class="lg:hidden fixed bottom-6 right-6 z-40 iso-btn-yellow p-4 rounded-full shadow-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+
+            <!-- TAB: GIỚI THIỆU -->
+            <section id="content-intro" class="tab-content block">
+                <div class="max-w-4xl space-y-12">
+                    <div class="iso-card p-10 bg-white">
+                        <h2 class="text-4xl font-extrabold mb-6 text-green-900">Chào mừng các em!</h2>
+                        <div class="space-y-6 text-lg leading-relaxed text-gray-700">
+                            <p class="font-bold text-green-700 border-l-8 border-yellow-400 pl-4 bg-yellow-50 py-4">
+                                "Nhiệt năng như một dòng suối, nó luôn tìm cách chảy từ nơi cao (nhiệt độ cao) đến nơi thấp (nhiệt độ thấp) cho đến khi vạn vật hòa làm một."
+                            </p>
+                            <p>
+                                Thầy là Lâm. Hôm nay chúng ta sẽ không học những định nghĩa khô khan. Chúng ta sẽ học cách quan sát thế giới thông qua lăng kính của sự truyền nhiệt. Tại sao mặt trời xa xôi lại làm ta đổ mồ hôi? Tại sao mùa đông ta lại thích nằm trên nệm ấm?
+                            </p>
+                            <p>
+                                Hãy tưởng tượng mỗi nguyên tử là một cậu bé đang nhảy múa. Cậu bé nào nhảy càng hăng (nóng), cậu ấy càng dễ chạm vào người bạn bên cạnh và truyền đi sự náo nhiệt đó.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="iso-card p-6 bg-green-50">
+                            <h4 class="font-bold mb-2">Mục tiêu bài học:</h4>
+                            <ul class="list-disc ml-5 space-y-1">
+                                <li>Hiểu về dẫn nhiệt, đối lưu, bức xạ.</li>
+                                <li>Phân biệt vật dẫn nhiệt và cách nhiệt.</li>
+                                <li>Giải thích các hiện tượng trong đời sống.</li>
+                            </ul>
+                        </div>
+                        <button onclick="switchTab('tab1')" class="iso-btn-yellow p-6 font-black text-xl flex items-center justify-center gap-4">
+                            BẮT ĐẦU KHÁM PHÁ
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 1: DẪN NHIỆT -->
+            <section id="content-tab1" class="tab-content hidden space-y-8">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                    <div class="iso-card p-8 bg-white">
+                        <h3 class="text-2xl font-black text-green-900 mb-6">1. DẪN NHIỆT & CÁCH NHIỆT</h3>
+                        <p class="mb-6">Dẫn nhiệt là hình thức truyền nhiệt từ phần này sang phần khác của một vật, hoặc từ vật này sang vật khác khi có tiếp xúc.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4 p-4 border-2 border-green-900 bg-green-50">
+                                <div class="bg-green-900 text-white p-2 font-bold">A</div>
+                                <div><strong>Vật dẫn nhiệt tốt:</strong> Kim loại (Đồng, nhôm, thép...).</div>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 border-2 border-green-900 bg-yellow-50">
+                                <div class="bg-yellow-500 text-green-900 p-2 font-bold">B</div>
+                                <div><strong>Vật cách nhiệt tốt:</strong> Gỗ, nhựa, thủy tinh, sứ, không khí...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="iso-card p-8 bg-white relative overflow-hidden">
+                        <h3 class="text-xl font-bold mb-6 italic">Mô phỏng Isometric: Dẫn nhiệt qua thanh đồng</h3>
+                        <div class="flex items-center justify-center bg-gray-50 p-6 border-2 border-dashed border-gray-300">
+                            <svg width="300" height="200" viewBox="0 0 300 200">
+                                <!-- Isometric Rod -->
+                                <path d="M50,100 L250,100 L270,80 L70,80 Z" fill="#b45309" stroke="#064e3b" stroke-width="2" />
+                                <path d="M50,100 L50,115 L250,115 L250,100" fill="#d97706" stroke="#064e3b" stroke-width="2" />
+                                <path d="M250,100 L270,80 L270,95 L250,115 Z" fill="#92400e" stroke="#064e3b" stroke-width="2" />
+                                
+                                <!-- Heat Source (Isometric Fire Box) -->
+                                <rect x="30" y="110" width="40" height="30" fill="#ef4444" stroke="#064e3b" stroke-width="2" />
+                                <text x="25" y="155" class="text-[10px] font-bold" fill="#ef4444">NGUỒN NHIỆT</text>
+
+                                <!-- Heat Particles -->
+                                <circle cx="60" cy="90" r="5" fill="#fbbf24" class="heat-iso" />
+                                <circle cx="60" cy="90" r="5" fill="#f59e0b" class="heat-iso" style="animation-delay: 0.6s;"/>
+                                <circle cx="60" cy="90" r="5" fill="#d97706" class="heat-iso" style="animation-delay: 1.2s;"/>
+                            </svg>
+                        </div>
+                        <p class="mt-4 text-sm text-gray-500 text-center">Các hạt nhiệt năng di chuyển dọc theo cấu trúc thanh kim loại.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: PHƯƠNG PHÁP -->
+            <section id="content-tab2" class="tab-content hidden space-y-10">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="iso-card p-6 bg-orange-50 hover:bg-orange-100 cursor-default">
+                        <div class="text-4xl mb-4">🧊</div>
+                        <h4 class="font-black text-xl mb-2">DẪN NHIỆT</h4>
+                        <p class="text-sm">Xảy ra ở vật rắn qua tiếp xúc trực tiếp.</p>
+                    </div>
+                    <div class="iso-card p-6 bg-blue-50 hover:bg-blue-100 cursor-default">
+                        <div class="text-4xl mb-4">💨</div>
+                        <h4 class="font-black text-xl mb-2">ĐỐI LƯU</h4>
+                        <p class="text-sm">Xảy ra ở chất lỏng/khí qua các dòng di chuyển.</p>
+                    </div>
+                    <div class="iso-card p-6 bg-red-50 hover:bg-red-100 cursor-default">
+                        <div class="text-4xl mb-4">☀️</div>
+                        <h4 class="font-black text-xl mb-2">BỨC XẠ</h4>
+                        <p class="text-sm">Truyền qua các tia nhiệt, kể cả chân không.</p>
+                    </div>
+                </div>
+
+                <div class="iso-card p-10 bg-white">
+                    <h3 class="text-2xl font-black mb-6">Công thức cần nhớ</h3>
+                    <div class="p-6 bg-green-50 border-2 border-green-900 shadow-[4px_4px_0px_#064e3b] inline-block mb-6">
+                        <span class="text-2xl font-bold">$$ Q = m \cdot c \cdot \Delta t $$</span>
+                    </div>
+                    <p class="text-gray-600">Trong đó: $Q$ là nhiệt lượng (J), $m$ là khối lượng (kg), $c$ là nhiệt dung riêng, $\Delta t$ là độ tăng nhiệt độ.</p>
+                </div>
+            </section>
+
+            <!-- TAB 3: ỨNG DỤNG -->
+            <section id="content-tab3" class="tab-content hidden space-y-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div class="space-y-6">
+                        <div class="iso-card p-6 bg-white border-l-8 border-l-blue-500">
+                            <h4 class="font-black mb-2">BÌNH THỦY (PHÍCH NƯỚC)</h4>
+                            <p class="text-sm text-gray-600">Sử dụng lớp chân không để ngăn cản hoàn toàn dẫn nhiệt và đối lưu.</p>
+                        </div>
+                        <div class="iso-card p-6 bg-white border-l-8 border-l-green-500">
+                            <h4 class="font-black mb-2">NHÀ KÍNH</h4>
+                            <p class="text-sm text-gray-600">Giữ bức xạ nhiệt từ mặt trời bên trong, giúp cây trồng ấm áp vào mùa lạnh.</p>
+                        </div>
+                        <div class="iso-card p-6 bg-white border-l-8 border-l-yellow-500">
+                            <h4 class="font-black mb-2">QUẦN ÁO MÙA ĐÔNG</h4>
+                            <p class="text-sm text-gray-600">Áo bông chứa nhiều không khí (chất cách nhiệt cực tốt) để giữ ấm cơ thể.</p>
+                        </div>
+                    </div>
+                    <div class="iso-card p-8 bg-green-900 text-white flex flex-col justify-center relative overflow-hidden">
+                        <div class="absolute -bottom-10 -right-10 opacity-10">
+                            <svg class="w-64 h-64" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2z"/></svg>
+                        </div>
+                        <h3 class="text-3xl font-black mb-6 leading-tight">Bài học từ đời thường</h3>
+                        <p class="italic text-lg text-green-100">
+                            "Các em ạ, chiếc phích giữ nước nóng không phải vì nó thêm nhiệt, mà vì nó biết cách giữ lại những gì đang có. Trí tuệ của con người cũng vậy, học được điều hay mà không biết 'cách nhiệt' với những cám dỗ bên ngoài thì kiến thức cũng dần nguội lạnh."
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: KIỂM TRA -->
+            <section id="content-test" class="tab-content hidden">
+                <div class="iso-card bg-white h-[600px] flex flex-col">
+                    <div class="p-4 bg-green-900 text-white font-bold flex justify-between items-center">
+                        <span>BÀI KIỂM TRA ĐỊNH KỲ</span>
+                        <div class="flex gap-2">
+                            <span class="w-3 h-3 bg-red-400"></span>
+                            <span class="w-3 h-3 bg-yellow-400"></span>
+                            <span class="w-3 h-3 bg-green-400"></span>
+                        </div>
+                    </div>
+                    <iframe src="test.html" class="flex-grow w-full border-none"></iframe>
+                </div>
+                <div class="mt-8 flex justify-center">
+                    <button class="iso-btn px-16 py-6 text-xl rounded-none">NỘP BÀI THU HOẠCH</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // Start Lesson - Hide Cover
+        function startLesson() {
+            const cover = document.getElementById('cover-page');
+            cover.classList.add('hidden-state');
+            setTimeout(() => { cover.style.display = 'none'; }, 700);
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            // Hide all
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('block'));
+            
+            // Show target
+            const target = document.getElementById('content-' + tabId);
+            target.classList.remove('hidden');
+            target.classList.add('block');
+
+            // Update Nav
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('nav-' + tabId).classList.add('active');
+
+            // Mobile menu behavior
+            if (window.innerWidth < 1024) {
+                toggleSidebar();
+            }
+
+            // MathJax re-render
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Sidebar Toggle for Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Handle direct navigation via URL hash if needed
+        window.addEventListener('load', () => {
+            const hash = window.location.hash.replace('#', '');
+            if (hash && ['intro', 'tab1', 'tab2', 'tab3', 'test'].includes(hash)) {
+                switchTab(hash);
+            }
+        });
+    </script>
+</body>
+</html>
